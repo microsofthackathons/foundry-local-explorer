@@ -9,8 +9,8 @@ This is considered a Proof of conecpt and is built on the Electron application f
 
 ## Screenshots
 
-| Windows | Linux | Mac |
-|---|---|---|
+| Windows                                                                        | Linux                                                                         | Mac         |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | ----------- |
 | ![Foundry Local Explorer on Windows](resources/FoundryLocalExplorer_Win11.png) | ![Foundry Local Explorer on Linux](resources/FoundryLocalExplorer_Ubuntu.png) | Coming soon |
 
 ## Requirements
@@ -52,6 +52,10 @@ npm run lint        # ESLint
 npm run format      # Prettier --write
 ```
 
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, pull request expectations, and concrete ideas for future improvements.
+
 ### 3. Build for production
 
 `npm run build` type-checks the project and produces an unpacked `electron-vite build` output in `out/`. The platform-specific commands below additionally package that output into an installable artifact.
@@ -68,6 +72,7 @@ npm run build:linux
 ```
 
 Notes:
+
 - Building for Windows works from Windows; cross-compiling `build:win` from macOS/Linux (or vice versa) is not supported/tested here.
 - `npm run build:unpack` produces an unpacked app directory (via `electron-builder --dir`) without generating an installer — useful for quickly testing a production build locally.
 - Packaged builds are unsigned by default (`notarize: false` on macOS, no code-signing config for Windows/Linux); expect an OS security prompt (SmartScreen/Gatekeeper) on first run of the installer.
@@ -129,5 +134,6 @@ FOUNDRY_LOCAL_CORE_PATH=/path/to/Microsoft.AI.Foundry.Local.Core.so npm run dev
 Note: the project's npm `name` used to be a spaced display name; the publishable package identifier is now `foundry-local-explorer`. The app's product/display name remains `Foundry Local Explorer`.
 
 Notes:
+
 - Prefer **Node.js 22 LTS** for this project.
 - On Git Bash, run the commands exactly as shown above (avoid shell history expansion issues in ad-hoc one-liners).
