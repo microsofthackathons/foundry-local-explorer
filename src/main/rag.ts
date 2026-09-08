@@ -4,6 +4,7 @@ import { readFile, writeFile, mkdir, stat } from 'fs/promises'
 import { randomUUID } from 'crypto'
 import type { DocumentSummary, IngestResult, RagChunkResult } from '@shared/types'
 import { embedTexts } from './foundry'
+import { conversationExists } from './db'
 
 const ALLOWED_EXTENSIONS = new Set(['.txt', '.md', '.pdf', '.docx'])
 const MAX_FILE_BYTES = 25 * 1024 * 1024 // 25 MB
@@ -245,6 +246,16 @@ export async function ingestFile(
   }
 
   const embeddings = await embedTexts(embedModelId, chunks)
+
+  // The embedding call above can take a long time (large file, slow model),
+  // during which the user may have deleted this conversation. Discard the
+  // (now-orphaned) result rather than writing it back into the store, which
+  // would otherwise silently resurrect a conversation's document data after
+  // deletion, defeating history:deleteConversation's cleanup.
+  if (!conversationExists(conversationId)) {
+    throw new Error('The conversation was deleted while this document was being processed.')
+  }
+
   const documentId = randomUUID()
   const documentName = filePath.split(/[\\/]/).pop() ?? filePath
 
@@ -281,6 +292,33 @@ export async function removeDocument(conversationId: string, documentId: string)
   const docs = store.get(conversationId) ?? []
   store.set(conversationId, docs.filter((d) => d.documentId !== documentId))
   await persist()
+}
+
+/** Removes every ingested document for a conversation. Called when the conversation itself
+ *  is deleted, so its RAG data doesn't linger forever as dead weight in rag-store.json. */
+export async function removeAllDocumentsForConversation(conversationId: string): Promise<void> {
+  await ensureLoaded()
+  if (!store.has(conversationId)) return
+  store.delete(conversationId)
+  await persist()
+}
+
+/** One-time startup reconciliation: removes any RAG documents left behind for conversations
+ *  that no longer exist in the conversation history database. This covers documents that were
+ *  already orphaned before removeAllDocumentsForConversation existed, plus any that slipped
+ *  through despite it (e.g. the app was killed between the SQL delete and the RAG persist). */
+export async function pruneOrphanedDocuments(
+  validConversationIds: ReadonlySet<string>
+): Promise<void> {
+  await ensureLoaded()
+  let changed = false
+  for (const conversationId of store.keys()) {
+    if (!validConversationIds.has(conversationId)) {
+      store.delete(conversationId)
+      changed = true
+    }
+  }
+  if (changed) await persist()
 }
 
 /** Embeds the query and returns the top-k most similar chunks across all documents in the conversation. */

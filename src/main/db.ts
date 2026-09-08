@@ -11,6 +11,11 @@ function getDb(): Database.Database {
   const dbPath = join(app.getPath('userData'), 'history.sqlite')
   db = new Database(dbPath)
   db.pragma('journal_mode = WAL')
+  // SQLite disables foreign key enforcement per-connection by default, so the
+  // ON DELETE CASCADE below is otherwise decorative and never actually runs.
+  // Must be set on every new connection (it is not a persistent database
+  // setting).
+  db.pragma('foreign_keys = ON')
   db.exec(`
     CREATE TABLE IF NOT EXISTS conversations (
       id TEXT PRIMARY KEY,
@@ -93,7 +98,16 @@ export function renameConversation(conversationId: string, title: string): void 
 }
 
 export function deleteConversation(conversationId: string): void {
-  const database = getDb()
-  database.prepare('DELETE FROM messages WHERE conversation_id = ?').run(conversationId)
-  database.prepare('DELETE FROM conversations WHERE id = ?').run(conversationId)
+  // With `PRAGMA foreign_keys = ON` (set in getDb()), this cascades to delete
+  // the conversation's messages too, per the ON DELETE CASCADE constraint on
+  // messages.conversation_id — no need to delete messages manually.
+  getDb().prepare('DELETE FROM conversations WHERE id = ?').run(conversationId)
+}
+
+/** True if a conversation with this id still exists. Used by rag.ts to detect
+ *  (and discard) a document ingestion that raced with the conversation being
+ *  deleted mid-flight. */
+export function conversationExists(conversationId: string): boolean {
+  const row = getDb().prepare('SELECT 1 FROM conversations WHERE id = ?').get(conversationId)
+  return row !== undefined
 }
