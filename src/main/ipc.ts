@@ -245,48 +245,55 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
     }
   })
 
-  ipcMain.handle('audio:transcribeFromBuffer', async (_event, request: TranscribeFromBufferRequest) => {
-    const { requestId, modelId, fileName, audioBytes } = request
-    if (!audioBytes || audioBytes.length === 0) {
-      throw new Error('Recorded microphone input was empty. Please record again.')
-    }
+  ipcMain.handle(
+    'audio:transcribeFromBuffer',
+    async (_event, request: TranscribeFromBufferRequest) => {
+      const { requestId, modelId, fileName, audioBytes } = request
+      if (!audioBytes || audioBytes.length === 0) {
+        throw new Error('Recorded microphone input was empty. Please record again.')
+      }
 
-    const tempName = `Foundry Local Explorer-mic-${requestId}-${safeAudioFileName(fileName)}`
-    const tempFilePath = path.join(os.tmpdir(), tempName)
+      const tempName = `Foundry Local Explorer-mic-${requestId}-${safeAudioFileName(fileName)}`
+      const tempFilePath = path.join(os.tmpdir(), tempName)
 
-    await fs.writeFile(tempFilePath, Buffer.from(audioBytes))
+      await fs.writeFile(tempFilePath, Buffer.from(audioBytes))
 
-    const controller = new AbortController()
-    activeTranscriptions.set(requestId, controller)
-    try {
-      const full = await foundry.transcribeAudio(
-        modelId,
-        tempFilePath,
-        (delta) => {
-          const payload: TranscribeChunkEvent = { requestId, delta, done: false }
-          send('audio:chunk', payload)
-        },
-        controller.signal
-      )
-      send('audio:chunk', {
-        requestId,
-        done: true,
-        stopped: controller.signal.aborted
-      } satisfies TranscribeChunkEvent)
-      return { ok: true, text: full }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      send('audio:chunk', { requestId, done: true, error: message } satisfies TranscribeChunkEvent)
-      throw error
-    } finally {
-      activeTranscriptions.delete(requestId)
+      const controller = new AbortController()
+      activeTranscriptions.set(requestId, controller)
       try {
-        await fs.rm(tempFilePath, { force: true })
-      } catch {
-        // Ignore temp cleanup errors.
+        const full = await foundry.transcribeAudio(
+          modelId,
+          tempFilePath,
+          (delta) => {
+            const payload: TranscribeChunkEvent = { requestId, delta, done: false }
+            send('audio:chunk', payload)
+          },
+          controller.signal
+        )
+        send('audio:chunk', {
+          requestId,
+          done: true,
+          stopped: controller.signal.aborted
+        } satisfies TranscribeChunkEvent)
+        return { ok: true, text: full }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        send('audio:chunk', {
+          requestId,
+          done: true,
+          error: message
+        } satisfies TranscribeChunkEvent)
+        throw error
+      } finally {
+        activeTranscriptions.delete(requestId)
+        try {
+          await fs.rm(tempFilePath, { force: true })
+        } catch {
+          // Ignore temp cleanup errors.
+        }
       }
     }
-  })
+  )
 
   ipcMain.handle('audio:stop', (_event, requestId: string) => {
     activeTranscriptions.get(requestId)?.abort()

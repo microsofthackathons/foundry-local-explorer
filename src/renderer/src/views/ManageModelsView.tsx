@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { EpStatus, ModelSummary } from '@shared/types'
-import ModelCard, { formatSize } from '../components/ModelCard'
+import ModelCard from '../components/ModelCard'
+import { formatSize } from '../utils/formatSize'
 import { MODEL_CATEGORY_LABELS, getModelCategory } from '../modelCategories'
 import type { ModelCategory } from '../modelCategories'
 
@@ -26,15 +27,18 @@ function ManageModelsView(): React.JSX.Element {
 
   useEffect(() => {
     let mounted = true
-    setLoading(true)
     Promise.all([window.api.foundry.listModels(), window.api.foundry.discoverEps()])
       .then(([modelList, epList]) => {
         if (!mounted) return
         setModels(modelList)
         setEps(epList)
       })
-      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        if (mounted) setError(err instanceof Error ? err.message : String(err))
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
     return () => {
       mounted = false
     }
@@ -61,9 +65,10 @@ function ManageModelsView(): React.JSX.Element {
       if (group) group.push(m)
       else groups.set(category, [m])
     }
-    return CATEGORY_ORDER.map((category) => ({ category, models: groups.get(category) ?? [] })).filter(
-      (g) => g.models.length > 0
-    )
+    return CATEGORY_ORDER.map((category) => ({
+      category,
+      models: groups.get(category) ?? []
+    })).filter((g) => g.models.length > 0)
   }, [cachedModels])
 
   // Totals are computed from the full model list (not the search-filtered

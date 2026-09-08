@@ -47,35 +47,32 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     let mounted = true
-    setEpsLoading(true)
-    setEpRegistrationWarning(null)
-    refreshEps()
-      .then((epList) => {
+
+    async function run(): Promise<void> {
+      const epList = await refreshEps()
+      if (!mounted) return
+      const hasUnregistered = epList.some((ep) => !ep.isRegistered)
+      if (!hasUnregistered) return
+      // Use SDK-side discovery/registration for "all EPs" because some
+      // runtimes can report duplicate provider names that break explicit
+      // name-based registration calls.
+      try {
+        const result = await window.api.foundry.registerEps()
         if (!mounted) return
-        const hasUnregistered = epList.some((ep) => !ep.isRegistered)
-        if (hasUnregistered) {
-          // Use SDK-side discovery/registration for "all EPs" because some
-          // runtimes can report duplicate provider names that break explicit
-          // name-based registration calls.
-          return window.api.foundry
-            .registerEps()
-            .then((result) => {
-              if (!mounted) return
-              if (!result.success) {
-                setEpRegistrationWarning(
-                  result.status || 'Some hardware acceleration providers could not be registered.'
-                )
-              }
-              return refreshEps()
-            })
-            .catch((err) => {
-              if (!mounted) return
-              setEpRegistrationWarning(err instanceof Error ? err.message : String(err))
-              console.error('Failed to auto-register execution providers', err)
-            })
+        if (!result.success) {
+          setEpRegistrationWarning(
+            result.status || 'Some hardware acceleration providers could not be registered.'
+          )
         }
-        return undefined
-      })
+        await refreshEps()
+      } catch (err) {
+        if (!mounted) return
+        setEpRegistrationWarning(err instanceof Error ? err.message : String(err))
+        console.error('Failed to auto-register execution providers', err)
+      }
+    }
+
+    run()
       .catch((err) => {
         if (!mounted) return
         setEpRegistrationWarning(err instanceof Error ? err.message : String(err))

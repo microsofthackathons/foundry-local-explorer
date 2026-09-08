@@ -20,7 +20,13 @@ const NAV_ITEMS: { id: ViewId; label: string; icon: string }[] = [
   { id: 'server', label: 'Local Server', icon: '🌐' }
 ]
 
-function Sidebar({ active, onChange, eps, epsLoading, epRegistrationWarning }: Props): React.JSX.Element {
+function Sidebar({
+  active,
+  onChange,
+  eps,
+  epsLoading,
+  epRegistrationWarning
+}: Props): React.JSX.Element {
   return (
     <nav className="sidebar">
       <h3 className="hardware-panel-title sidebar-section-title">foundry local AI</h3>

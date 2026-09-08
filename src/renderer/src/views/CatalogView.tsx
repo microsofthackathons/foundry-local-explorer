@@ -24,8 +24,12 @@ function CatalogView({ eps }: Props): React.JSX.Element {
 
   useEffect(() => {
     let mounted = true
-    setLoading(true)
-    refreshModels()
+
+    async function run(): Promise<void> {
+      await refreshModels()
+    }
+
+    run()
       .catch((err) => {
         if (mounted) setError(err instanceof Error ? err.message : String(err))
       })
@@ -33,28 +37,30 @@ function CatalogView({ eps }: Props): React.JSX.Element {
         if (mounted) setLoading(false)
       })
 
-    const unsubscribe = window.api.foundry.onDownloadProgress(({ modelId, progress: p, error: err }) => {
-      if (err) {
-        setError(err)
-        setProgress((prev) => {
-          const next = { ...prev }
-          delete next[modelId]
-          return next
-        })
-        return
-      }
-      setProgress((prev) => ({ ...prev, [modelId]: p }))
-      if (p >= 100) {
-        setTimeout(() => {
+    const unsubscribe = window.api.foundry.onDownloadProgress(
+      ({ modelId, progress: p, error: err }) => {
+        if (err) {
+          setError(err)
           setProgress((prev) => {
             const next = { ...prev }
             delete next[modelId]
             return next
           })
-          refreshModels()
-        }, 400)
+          return
+        }
+        setProgress((prev) => ({ ...prev, [modelId]: p }))
+        if (p >= 100) {
+          setTimeout(() => {
+            setProgress((prev) => {
+              const next = { ...prev }
+              delete next[modelId]
+              return next
+            })
+            refreshModels()
+          }, 400)
+        }
       }
-    })
+    )
 
     return () => {
       mounted = false
@@ -67,7 +73,10 @@ function CatalogView({ eps }: Props): React.JSX.Element {
   // device-specific model variants in the catalog, so re-fetch models whenever
   // the set of EPs changes.
   useEffect(() => {
-    refreshModels().catch(() => {})
+    async function run(): Promise<void> {
+      await refreshModels()
+    }
+    run().catch(() => {})
   }, [eps, refreshModels])
 
   const registeredEps = useMemo(

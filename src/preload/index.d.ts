@@ -34,9 +34,7 @@ export interface FlStudioApi {
     onEpRegisterProgress: (callback: (event: EpRegisterProgressEvent) => void) => () => void
   }
   chat: {
-    send: (
-      request: ChatSendRequest
-    ) => Promise<{ ok: true; content: string; ragWarning?: string }>
+    send: (request: ChatSendRequest) => Promise<{ ok: true; content: string; ragWarning?: string }>
     stop: (requestId: string) => Promise<{ ok: true }>
     onChunk: (callback: (event: ChatChunkEvent) => void) => () => void
   }
@@ -61,7 +59,9 @@ export interface FlStudioApi {
   }
   audio: {
     transcribe: (request: TranscribeSendRequest) => Promise<{ ok: true; text: string }>
-    transcribeFromBuffer: (request: TranscribeFromBufferRequest) => Promise<{ ok: true; text: string }>
+    transcribeFromBuffer: (
+      request: TranscribeFromBufferRequest
+    ) => Promise<{ ok: true; text: string }>
     stop: (requestId: string) => Promise<{ ok: true }>
     onChunk: (callback: (event: TranscribeChunkEvent) => void) => () => void
   }

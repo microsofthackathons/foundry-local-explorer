@@ -45,8 +45,16 @@ export function createConversation(modelId: string, title: string): Conversation
 
 export function listConversations(): ConversationSummary[] {
   const rows = getDb()
-    .prepare('SELECT id, title, model_id, created_at, updated_at FROM conversations ORDER BY updated_at DESC')
-    .all() as Array<{ id: string; title: string; model_id: string; created_at: number; updated_at: number }>
+    .prepare(
+      'SELECT id, title, model_id, created_at, updated_at FROM conversations ORDER BY updated_at DESC'
+    )
+    .all() as Array<{
+    id: string
+    title: string
+    model_id: string
+    created_at: number
+    updated_at: number
+  }>
   return rows.map((r) => ({
     id: r.id,
     title: r.title,

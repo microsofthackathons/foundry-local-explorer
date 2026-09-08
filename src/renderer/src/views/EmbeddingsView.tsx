@@ -47,7 +47,10 @@ function EmbeddingsView(): React.JSX.Element {
   }, [selectedModelId])
 
   useEffect(() => {
-    refreshLoadedModels()
+    async function run(): Promise<void> {
+      await refreshLoadedModels()
+    }
+    run().catch(() => {})
   }, [refreshLoadedModels])
 
   const texts = useMemo(
@@ -89,9 +92,8 @@ function EmbeddingsView(): React.JSX.Element {
       <h2>Embeddings</h2>
       <p className="muted">
         Load an embeddings model in the Catalog tab, then enter one text per line below. This
-        generates a vector per line and shows the pairwise cosine similarity between them — a
-        quick way to sanity-check that semantically related lines score higher than unrelated
-        ones.
+        generates a vector per line and shows the pairwise cosine similarity between them — a quick
+        way to sanity-check that semantically related lines score higher than unrelated ones.
       </p>
 
       <div className="embeddings-toolbar">
@@ -157,7 +159,11 @@ function EmbeddingsView(): React.JSX.Element {
             <summary>Raw vector preview (first 8 dimensions)</summary>
             {vectors.map((v, i) => (
               <div key={i} className="embeddings-raw-row">
-                <strong>{i + 1}.</strong> [{v.slice(0, 8).map((n) => n.toFixed(4)).join(', ')}
+                <strong>{i + 1}.</strong> [
+                {v
+                  .slice(0, 8)
+                  .map((n) => n.toFixed(4))
+                  .join(', ')}
                 {v.length > 8 ? ', …' : ''}]
               </div>
             ))}
