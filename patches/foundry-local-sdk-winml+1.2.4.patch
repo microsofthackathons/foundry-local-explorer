@@ -1,0 +1,42 @@
+diff --git a/node_modules/foundry-local-sdk-winml/script/install-utils.cjs b/node_modules/foundry-local-sdk-winml/script/install-utils.cjs
+--- a/node_modules/foundry-local-sdk-winml/script/install-utils.cjs
++++ b/node_modules/foundry-local-sdk-winml/script/install-utils.cjs
+@@ -35,7 +35,17 @@
+ // builds of Foundry Local Core, ONNX Runtime and ONNX Runtime GenAI live
+ // before they reach nuget.org). If a download from a feed fails for any
+ // reason, the next feed is tried.
++//
++// An optional corporate/proxy feed can be prepended via the
++// FOUNDRY_LOCAL_NUGET_FEEDS env var (semicolon-separated NuGet v3 service
++// index URLs), or the npm-config equivalent set through .npmrc
++// (foundry_local_nuget_feeds=...), which npm exposes to lifecycle scripts
++// as npm_config_foundry_local_nuget_feeds.
++const EXTRA_FEEDS_RAW =
++    process.env.FOUNDRY_LOCAL_NUGET_FEEDS || process.env.npm_config_foundry_local_nuget_feeds || '';
++const EXTRA_FEEDS = EXTRA_FEEDS_RAW.split(';').map((f) => f.trim()).filter(Boolean);
+ const FEEDS = [
++    ...EXTRA_FEEDS,
+     'https://api.nuget.org/v3/index.json',
+     'https://pkgs.dev.azure.com/aiinfra/PublicPackages/_packaging/ORT-Nightly/nuget/v3/index.json',
+ ];
+diff --git a/node_modules/foundry-local-sdk-winml/script/install-winml.cjs b/node_modules/foundry-local-sdk-winml/script/install-winml.cjs
+--- a/node_modules/foundry-local-sdk-winml/script/install-winml.cjs
++++ b/node_modules/foundry-local-sdk-winml/script/install-winml.cjs
+@@ -71,6 +71,17 @@
+ }
+ 
+ (async () => {
++    // WinML (Windows Machine Learning) is a Windows-only technology. On other
++    // platforms, Microsoft.AI.Foundry.Local.Core.WinML ships no binaries, and the
++    // ONNX Runtime / GenAI artifacts here are identical to (and would just
++    // redundantly re-download and overwrite) what foundry-local-sdk's own standard
++    // installer already fetches for this platform. Skip entirely to avoid
++    // unnecessary network calls and failure modes on restricted networks.
++    if (process.platform !== 'win32') {
++        console.log('[foundry-local] Skipping WinML binary install on non-Windows platform.');
++        process.exit(0);
++    }
++
+     try {
+         // Force override into foundry-local-sdk's binary directory
+         await runInstall(ARTIFACTS, { force: true, binDir });
