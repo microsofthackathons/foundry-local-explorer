@@ -4,6 +4,14 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/AppIcon.png?asset'
 import { registerIpcHandlers } from './ipc'
 
+// Electron's default app name (used for the macOS menu bar's bold app
+// menu, About/Hide/Quit items, and the Dock) falls back to whatever it
+// can find in the nearest package.json, which can end up showing
+// "Electron" instead of the app's real name — especially when running
+// unpackaged in dev mode. Set it explicitly, and do so before the app is
+// ready since some platforms only pick up the name change at startup.
+app.setName('Foundry Local Explorer')
+
 let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
