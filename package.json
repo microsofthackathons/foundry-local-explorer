@@ -1,10 +1,10 @@
 {
   "name": "foundry-local-explorer",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "A desktop GUI for Microsoft Foundry Local — browse the model catalog, chat, generate embeddings, and transcribe audio using local AI models.",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Foundry Local Explorer contributors",
+  "homepage": "https://github.com/KateiRen/Foundry-Local-Explorer",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
