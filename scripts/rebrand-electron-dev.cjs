@@ -55,7 +55,37 @@ const replacements = [
 ];
 
 for (const [key, value] of replacements) {
-    execFileSync('plutil', ['-replace', key, '-string', value, plistPath]);
+    try {
+        execFileSync('plutil', ['-replace', key, '-string', value, plistPath]);
+    } catch (err) {
+        // Don't let a cosmetic dev-mode branding failure (e.g. plutil
+        // missing, plist unwritable/malformed) abort the whole
+        // `npm install`/postinstall chain and block dependency setup.
+        console.warn(
+            `[foundry-local-explorer] Could not set ${key} on the dev Electron.app bundle (non-fatal; ` +
+                'the app may still show "Electron" in the Dock/menu bar in dev mode):',
+            err instanceof Error ? err.message : err
+        );
+    }
+}
+
+// macOS's Launch Services caches bundle metadata (name, bundle id, icon)
+// keyed by path, separately from the Info.plist itself. Without forcing a
+// re-scan here, the Dock tooltip and Cmd+Tab switcher can keep showing the
+// stale "Electron" name even though Info.plist has already been patched,
+// until something else (e.g. a Finder relaunch or reboot) happens to
+// trigger Launch Services to notice the change on its own.
+const lsregister =
+    '/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister';
+const appBundlePath = path.join(plistPath, '..', '..');
+try {
+    execFileSync(lsregister, ['-f', appBundlePath]);
+} catch (err) {
+    console.warn(
+        '[foundry-local-explorer] Could not refresh Launch Services registration for the dev Electron.app bundle ' +
+            '(non-fatal; the Dock/menu-bar name may still show "Electron" until next reboot or Finder relaunch):',
+        err instanceof Error ? err.message : err
+    );
 }
 
 console.log(`[foundry-local-explorer] Rebranded dev Electron.app bundle as "${APP_NAME}".`);
