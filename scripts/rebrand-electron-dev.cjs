@@ -73,7 +73,6 @@ if (bundlePath !== newBundlePath) {
     try {
         fs.renameSync(bundlePath, newBundlePath);
         bundlePath = newBundlePath;
-        fs.writeFileSync(pathTxt, `${APP_NAME}.app/Contents/MacOS/Electron`);
     } catch (err) {
         console.warn(
             '[foundry-local-explorer] Could not rename the dev Electron.app bundle (non-fatal; the app may still ' +
@@ -81,6 +80,30 @@ if (bundlePath !== newBundlePath) {
             err instanceof Error ? err.message : err
         );
     }
+}
+
+// Regardless of whether a rename just happened above, make sure path.txt
+// actually matches wherever the bundle lives on disk right now. This
+// self-heals a previous run that renamed the bundle but then failed to
+// write path.txt (e.g. disk full, read-only fs) — without this check that
+// failure would otherwise be permanent, since the "already renamed" branch
+// above would never touch path.txt again on subsequent runs.
+const expectedPathTxt = `${path.basename(bundlePath)}/Contents/MacOS/Electron`;
+try {
+    const currentPathTxt = fs.existsSync(pathTxt) ? fs.readFileSync(pathTxt, 'utf8').trim() : null;
+    if (currentPathTxt !== expectedPathTxt) {
+        // Write atomically (write to a temp file, then rename into place) so a
+        // crash or interrupted write can't leave path.txt truncated/corrupt.
+        const tmpPathTxt = `${pathTxt}.tmp`;
+        fs.writeFileSync(tmpPathTxt, expectedPathTxt);
+        fs.renameSync(tmpPathTxt, pathTxt);
+    }
+} catch (err) {
+    console.warn(
+        '[foundry-local-explorer] Could not update node_modules/electron/path.txt to match the renamed bundle. ' +
+            'Electron will likely fail to launch until this is fixed (delete node_modules/electron and reinstall):',
+        err instanceof Error ? err.message : err
+    );
 }
 
 const plistPath = path.join(bundlePath, 'Contents', 'Info.plist');
