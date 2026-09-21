@@ -9,9 +9,11 @@ This is considered a Proof of conecpt and is built on the Electron application f
 
 ## Screenshots
 
-| Windows                                                                        | Linux                                                                         | Mac         |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | ----------- |
-| ![Foundry Local Explorer on Windows](resources/FoundryLocalExplorer_Win11.png) | ![Foundry Local Explorer on Linux](resources/FoundryLocalExplorer_Ubuntu.png) | Coming soon |
+| Windows                                                                        | Linux                                                                         | macOS                                                                     |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| ![Foundry Local Explorer on Windows](resources/FoundryLocalExplorer_Win11.png) | ![Foundry Local Explorer on Linux](resources/FoundryLocalExplorer_Ubuntu.png) | ![Foundry Local Explorer on macOS](resources/FoundryLocalExplorer_macOS.png) |
+
+More macOS views: [Manage Models](resources/FoundryLocalExplorer_macOS_2.png) · [Chat](resources/FoundryLocalExplorer_macOS_3.png) · [Transcribe](resources/FoundryLocalExplorer_macOS_4.png) · [Local Server](resources/FoundryLocalExplorer_macOS_5.png)
 
 ## Requirements
 

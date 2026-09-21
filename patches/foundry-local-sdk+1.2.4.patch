@@ -1,0 +1,42 @@
+diff --git a/node_modules/foundry-local-sdk/script/install-standard.cjs b/node_modules/foundry-local-sdk/script/install-standard.cjs
+--- a/node_modules/foundry-local-sdk/script/install-standard.cjs
++++ b/node_modules/foundry-local-sdk/script/install-standard.cjs
+@@ -9,11 +9,14 @@
+ const os = require('os');
+ const path = require('path');
+ 
+-// If foundry-local-sdk-winml is also being installed, skip the standard binary
+-// download entirely — the winml install script will handle all binary provisioning.
++// If foundry-local-sdk-winml is also being installed AND we are on Windows, skip
++// the standard binary download entirely — the winml install script will handle all
++// binary provisioning there. WinML is a Windows-only technology (Microsoft.AI.Foundry.
++// Local.Core.WinML ships no macOS/Linux binaries), so on non-Windows platforms the
++// standard installer must still run to fetch the real Core library for this OS.
+ // npm extracts all packages before running lifecycle scripts, so this check is reliable.
+ const winmlPkgJson = path.join(__dirname, '..', '..', 'foundry-local-sdk-winml', 'package.json');
+-if (fs.existsSync(winmlPkgJson)) {
++if (os.platform() === 'win32' && fs.existsSync(winmlPkgJson)) {
+     console.log('[foundry-local] foundry-local-sdk-winml detected. Deferring binary install to winml variant.');
+     process.exit(0);
+ }
+diff --git a/node_modules/foundry-local-sdk/script/install-utils.cjs b/node_modules/foundry-local-sdk/script/install-utils.cjs
+--- a/node_modules/foundry-local-sdk/script/install-utils.cjs
++++ b/node_modules/foundry-local-sdk/script/install-utils.cjs
+@@ -35,7 +35,17 @@
+ // builds of Foundry Local Core, ONNX Runtime and ONNX Runtime GenAI live
+ // before they reach nuget.org). If a download from a feed fails for any
+ // reason, the next feed is tried.
++//
++// An optional corporate/proxy feed can be prepended via the
++// FOUNDRY_LOCAL_NUGET_FEEDS env var (semicolon-separated NuGet v3 service
++// index URLs), or the npm-config equivalent set through .npmrc
++// (foundry_local_nuget_feeds=...), which npm exposes to lifecycle scripts
++// as npm_config_foundry_local_nuget_feeds.
++const EXTRA_FEEDS_RAW =
++    process.env.FOUNDRY_LOCAL_NUGET_FEEDS || process.env.npm_config_foundry_local_nuget_feeds || '';
++const EXTRA_FEEDS = EXTRA_FEEDS_RAW.split(';').map((f) => f.trim()).filter(Boolean);
+ const FEEDS = [
++    ...EXTRA_FEEDS,
+     'https://api.nuget.org/v3/index.json',
+     'https://pkgs.dev.azure.com/aiinfra/PublicPackages/_packaging/ORT-Nightly/nuget/v3/index.json',
+ ];
