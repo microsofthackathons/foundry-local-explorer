@@ -33,11 +33,11 @@ linux:
     - AppImage
     - snap
     - deb
-  maintainer: electronjs.org
+  maintainer: Foundry Local Explorer contributors
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
-publish:
-  provider: generic
-  url: https://example.com/auto-updates
+# No auto-update mechanism (electron-updater) is wired up in this app yet, so
+# there is no working publish target. Re-add this block (with a real feed URL)
+# if/when auto-updates are implemented.
