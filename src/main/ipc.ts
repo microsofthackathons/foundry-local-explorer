@@ -304,9 +304,13 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
   ipcMain.handle('history:renameConversation', (_event, conversationId: string, title: string) =>
     db.renameConversation(conversationId, title)
   )
-  ipcMain.handle('history:deleteConversation', (_event, conversationId: string) =>
+  ipcMain.handle('history:deleteConversation', async (_event, conversationId: string) => {
     db.deleteConversation(conversationId)
-  )
+    // Also clean up any documents ingested for this conversation's RAG context,
+    // which live in a separate store (rag-store.json) not covered by the SQL
+    // delete above.
+    await rag.removeAllDocumentsForConversation(conversationId)
+  })
 
   // --- RAG documents ---
   ipcMain.handle(
@@ -320,4 +324,13 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
   ipcMain.handle('rag:removeDocument', (_event, conversationId: string, documentId: string) =>
     rag.removeDocument(conversationId, documentId)
   )
+
+  // One-time startup reconciliation: clears out any RAG documents left behind
+  // for conversations that no longer exist (e.g. from before
+  // removeAllDocumentsForConversation existed, or from a delete that was
+  // interrupted mid-flight before this app last quit).
+  const validConversationIds = new Set(db.listConversations().map((c) => c.id))
+  rag.pruneOrphanedDocuments(validConversationIds).catch((error) => {
+    console.error('Failed to prune orphaned RAG documents on startup:', error)
+  })
 }
