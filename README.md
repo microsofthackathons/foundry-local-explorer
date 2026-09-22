@@ -5,7 +5,7 @@ Microsoft [Foundry Local](https://learn.microsoft.com/azure/ai-foundry/foundry-l
 
 But why not building a simple GUI around Foundry Local to expose its capabilities, the model catalogue, the local hardware acceleration and the OpenAI compatible API for easier testing and using it as local AI sandbox?
 
-This is considered a Proof of conecpt and is built on the Electron application framework with React and TypeScript — a desktop GUI for .
+This is considered a Proof of Concept and is built on the Electron application framework with React and TypeScript — a desktop GUI for Foundry Local.
 
 ## Screenshots
 
@@ -18,7 +18,7 @@ More macOS views: [Manage Models](resources/FoundryLocalExplorer_macOS_2.png) ·
 ## Requirements
 
 - **OS**: Windows, macOS, or Linux (the app's hardware/EP detection is powered by the `foundry-local-sdk`, which is cross-platform).
-- **Node.js**: 20.x LTS or later, with a matching **npm** (bundled with Node).
+- **Node.js**: 22.x LTS or later, with a matching **npm** (bundled with Node).
 - **Foundry Local SDK runtime**: provided through npm dependencies (`foundry-local-sdk` / `foundry-local-sdk-winml`) during install. The `foundry` CLI is optional for this app; EP discovery/registration is SDK-driven.
 - **Build tools for native modules**: this project depends on `better-sqlite3`, which compiles a native Node addon on install. Make sure you have the platform's native build toolchain available before running `npm install`.
   - **Windows**: [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) (Desktop development with C++ workload) or `npm install --global windows-build-tools` equivalent, plus Python.
