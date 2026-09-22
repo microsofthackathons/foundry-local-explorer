@@ -25,7 +25,10 @@ function HardwarePanel({ eps, loading, registrationWarning }: Props): React.JSX.
       {!loading && eps.length === 0 && <p className="muted">No execution providers detected.</p>}
       <ul className="ep-list">
         {eps.map((ep, idx) => (
-          <li key={`${ep.name}-${idx}`} className={ep.isRegistered ? 'ep-registered' : 'ep-available'}>
+          <li
+            key={`${ep.name}-${idx}`}
+            className={ep.isRegistered ? 'ep-registered' : 'ep-available'}
+          >
             <div className="ep-row">
               <span className={`status-dot ${ep.isRegistered ? 'on' : 'off'}`} />
               <span className="ep-name">{ep.name}</span>

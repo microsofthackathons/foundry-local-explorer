@@ -172,12 +172,16 @@ async function persist(): Promise<void> {
 async function extractText(filePath: string): Promise<string> {
   const ext = extname(filePath).toLowerCase()
   if (!ALLOWED_EXTENSIONS.has(ext)) {
-    throw new Error(`Unsupported file type "${ext}". Supported: ${[...ALLOWED_EXTENSIONS].join(', ')}`)
+    throw new Error(
+      `Unsupported file type "${ext}". Supported: ${[...ALLOWED_EXTENSIONS].join(', ')}`
+    )
   }
 
   const fileStat = await stat(filePath)
   if (fileStat.size > MAX_FILE_BYTES) {
-    throw new Error(`File is too large (${Math.round(fileStat.size / 1024 / 1024)} MB). Limit is 25 MB.`)
+    throw new Error(
+      `File is too large (${Math.round(fileStat.size / 1024 / 1024)} MB). Limit is 25 MB.`
+    )
   }
 
   if (ext === '.txt' || ext === '.md') {
@@ -279,7 +283,10 @@ export async function listDocuments(conversationId: string): Promise<DocumentSum
 export async function removeDocument(conversationId: string, documentId: string): Promise<void> {
   await ensureLoaded()
   const docs = store.get(conversationId) ?? []
-  store.set(conversationId, docs.filter((d) => d.documentId !== documentId))
+  store.set(
+    conversationId,
+    docs.filter((d) => d.documentId !== documentId)
+  )
   await persist()
 }
 
@@ -310,9 +317,7 @@ export async function retrieve(
   // or, for short documents, miss content the model actually needs. Detect that
   // case and just hand over every chunk (bounded by a generous cap) instead of
   // relying on similarity ranking.
-  const wantsWholeDocument = /\b(summar|overview|tl;?dr|main points|key points|gist)\b/i.test(
-    query
-  )
+  const wantsWholeDocument = /\b(summar|overview|tl;?dr|main points|key points|gist)\b/i.test(query)
   const WHOLE_DOC_CHUNK_CAP = 12
   if (wantsWholeDocument || allChunks.length <= topK) {
     return allChunks.slice(0, WHOLE_DOC_CHUNK_CAP).map((c) => ({

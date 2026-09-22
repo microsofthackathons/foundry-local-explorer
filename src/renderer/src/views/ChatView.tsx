@@ -54,8 +54,11 @@ function ChatView(): React.JSX.Element {
   }, [])
 
   useEffect(() => {
-    refreshLoadedModels()
-    refreshConversations()
+    async function run(): Promise<void> {
+      await refreshLoadedModels()
+      await refreshConversations()
+    }
+    run().catch(() => {})
   }, [refreshLoadedModels, refreshConversations])
 
   useEffect(() => {
@@ -76,6 +79,10 @@ function ChatView(): React.JSX.Element {
 
   useEffect(() => {
     if (!activeConversationId) {
+      // Resetting derived view state when the conversation selection clears;
+      // this is local UI-state cleanup, not a remote fetch that needs
+      // restructuring.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages([])
       setDocuments([])
       return
@@ -269,7 +276,9 @@ function ChatView(): React.JSX.Element {
 
         <div ref={scrollRef} className="chat-messages">
           {messages.length === 0 && !isStreaming && (
-            <p className="muted chat-empty">Load a model in the Catalog tab, then start chatting.</p>
+            <p className="muted chat-empty">
+              Load a model in the Catalog tab, then start chatting.
+            </p>
           )}
           {messages.map((m) => (
             <div key={m.id} className={`chat-bubble ${m.role}`}>

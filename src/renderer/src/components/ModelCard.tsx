@@ -1,4 +1,5 @@
 import type { ModelSummary } from '@shared/types'
+import { formatSize } from '../utils/formatSize'
 
 interface Props {
   model: ModelSummary
@@ -10,12 +11,6 @@ interface Props {
   onLoad: (modelId: string) => void
   onUnload: (modelId: string) => void
   onDelete: (modelId: string) => void
-}
-
-export function formatSize(mb?: number | null): string {
-  if (!mb) return '—'
-  if (mb < 1024) return `${mb.toFixed(0)} MB`
-  return `${(mb / 1024).toFixed(1)} GB`
 }
 
 function ModelCard({

@@ -39,8 +39,7 @@ const api = {
     listModels: () => invokeIpc('foundry:listModels'),
     discoverEps: () => invokeIpc('foundry:discoverEps'),
     registerEps: (names?: string[]) => invokeIpc('foundry:registerEps', names),
-    cancelRegisterEps: (names?: string[]) =>
-      invokeIpc('foundry:cancelRegisterEps', names),
+    cancelRegisterEps: (names?: string[]) => invokeIpc('foundry:cancelRegisterEps', names),
     downloadModel: (modelId: string) => invokeIpc('foundry:downloadModel', modelId),
     cancelDownload: (modelId: string) => invokeIpc('foundry:cancelDownload', modelId),
     loadModel: (modelId: string) => invokeIpc('foundry:loadModel', modelId),

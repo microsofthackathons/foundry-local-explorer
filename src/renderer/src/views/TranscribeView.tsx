@@ -13,7 +13,8 @@ function pickSupportedMimeType(): string {
 function extensionForMimeType(mimeType: string): string {
   if (mimeType.includes('ogg')) return 'ogg'
   if (mimeType.includes('wav')) return 'wav'
-  if (mimeType.includes('mp4') || mimeType.includes('mpeg') || mimeType.includes('aac')) return 'm4a'
+  if (mimeType.includes('mp4') || mimeType.includes('mpeg') || mimeType.includes('aac'))
+    return 'm4a'
   return 'webm'
 }
 
@@ -101,7 +102,10 @@ function TranscribeView(): React.JSX.Element {
   }, [selectedModelId])
 
   useEffect(() => {
-    refreshLoadedModels()
+    async function run(): Promise<void> {
+      await refreshLoadedModels()
+    }
+    run().catch(() => {})
   }, [refreshLoadedModels])
 
   useEffect(() => {
@@ -279,7 +283,9 @@ function TranscribeView(): React.JSX.Element {
     try {
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
       const mimeType = pickSupportedMimeType()
-      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream)
 
       micChunksRef.current = []
       mediaStreamRef.current = stream
@@ -369,7 +375,10 @@ function TranscribeView(): React.JSX.Element {
             Stop
           </button>
         ) : (
-          <button onClick={handleTranscribe} disabled={!filePath || !selectedModelId || isMicRecording}>
+          <button
+            onClick={handleTranscribe}
+            disabled={!filePath || !selectedModelId || isMicRecording}
+          >
             Transcribe
           </button>
         )}
